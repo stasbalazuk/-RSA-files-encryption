@@ -1,11 +1,11 @@
 object Form1: TForm1
-  Left = 796
-  Top = 272
+  Left = 686
+  Top = 265
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
-  Caption = 'RSA v1.0.0.0  | StalkerSTS | '#1064#1080#1092#1088#1086#1074#1072#1085#1080#1077' '#1092#1072#1081#1083#1072
-  ClientHeight = 371
-  ClientWidth = 409
+  Caption = 'RSA v1.0.0.0  | StalkerSTS | Crypt | Decrypt files'
+  ClientHeight = 369
+  ClientWidth = 410
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,11 +21,11 @@ object Form1: TForm1
   TextHeight = 13
   object GroupBox1: TGroupBox
     Left = 0
-    Top = 1
-    Width = 409
+    Top = -1
+    Width = 410
     Height = 53
     Align = alBottom
-    Caption = #1059#1082#1072#1079#1072#1090#1100' '#1092#1072#1081#1083' '#1076#1083#1103' '#1079#1072#1075#1088#1091#1079#1082#1080' '#1076#1072#1085#1085#1099#1093
+    Caption = 'Path Files'
     TabOrder = 0
     object Edit1: TEdit
       Left = 8
@@ -40,18 +40,18 @@ object Form1: TForm1
       Top = 20
       Width = 85
       Height = 21
-      Caption = #1054#1090#1082#1088#1099#1090#1100
+      Caption = 'Open Files'
       TabOrder = 1
       OnClick = Button1Click
     end
   end
   object GroupBox2: TGroupBox
     Left = 0
-    Top = 54
-    Width = 409
+    Top = 52
+    Width = 410
     Height = 53
     Align = alBottom
-    Caption = #1059#1082#1072#1079#1072#1090#1100' '#1092#1072#1081#1083' '#1076#1083#1103' '#1089#1086#1093#1088#1072#1085#1077#1085#1080#1103' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1072
+    Caption = 'Crypt | Decrypt Files'
     TabOrder = 1
     object Edit2: TEdit
       Left = 8
@@ -63,8 +63,8 @@ object Form1: TForm1
   end
   object GroupBox4: TGroupBox
     Left = 0
-    Top = 224
-    Width = 409
+    Top = 222
+    Width = 410
     Height = 147
     Align = alBottom
     Caption = #1042#1099#1087#1086#1083#1085#1080#1090#1100' '#1076#1077#1081#1089#1090#1074#1080#1103
@@ -72,7 +72,7 @@ object Form1: TForm1
     object Gauge1: TGauge
       Left = 2
       Top = 125
-      Width = 405
+      Width = 406
       Height = 20
       Align = alBottom
       ForeColor = clBlue
@@ -83,7 +83,7 @@ object Form1: TForm1
       Top = 20
       Width = 81
       Height = 53
-      Caption = #1064#1080#1092#1088#1086#1074#1072#1090#1100
+      Caption = 'Crypt Files'
       Enabled = False
       TabOrder = 0
       OnClick = Button3Click
@@ -93,7 +93,7 @@ object Form1: TForm1
       Top = 20
       Width = 85
       Height = 53
-      Caption = #1044#1077#1096#1080#1092#1088#1086#1074#1072#1090#1100
+      Caption = 'Decrypt Files'
       Enabled = False
       TabOrder = 1
       OnClick = Button4Click
@@ -101,7 +101,7 @@ object Form1: TForm1
     object Panel1: TPanel
       Left = 2
       Top = 104
-      Width = 405
+      Width = 406
       Height = 21
       Align = alBottom
       Caption = #1057#1090#1072#1090#1091#1089
@@ -112,7 +112,7 @@ object Form1: TForm1
       Top = 20
       Width = 211
       Height = 21
-      Caption = 'Generator P | Q | N | E | D'
+      Caption = 'Generator RSA public | private key'
       TabOrder = 3
       OnClick = btn1Click
     end
@@ -139,8 +139,8 @@ object Form1: TForm1
   end
   object grp1: TGroupBox
     Left = 0
-    Top = 107
-    Width = 409
+    Top = 105
+    Width = 410
     Height = 117
     Align = alBottom
     Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1096#1080#1092#1088#1086#1074#1072#1085#1080#1103
@@ -205,7 +205,7 @@ object Form1: TForm1
     end
   end
   object OpenDialog1: TOpenDialog
-    Left = 312
+    Left = 280
     Top = 48
   end
   object DCP_rijndael1: TDCP_rijndael

@@ -51,7 +51,7 @@ var
   Form1: TForm1;
   p,q,e,d,n2n:word;
   n,m:longword;
-  keys: TStringList;
+  keys,keyp: TStringList;
   icp: integer;
   scp: string;
   cp: TStringList;
@@ -144,6 +144,7 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
+  OpenDialog1.Filter:='*.*|*.*';
   OpenDialog1.InitialDir := ExtractFileDir(ParamStr(0));
   if OpenDialog1.Execute then
   if ExtractFileExt(OpenDialog1.FileName) = '.rsa' then begin
@@ -172,8 +173,6 @@ procedure FillPQE(out P, Q, E, D: TInt);
 var
   I: TInt;
 begin
-  if Form1.LabeledEdit1.Text = '' then Exit;
-  if Form1.LabeledEdit2.Text = '' then Exit;
   P := StrToInt64(Form1.LabeledEdit1.Text);
   Q := StrToInt64(Form1.LabeledEdit2.Text);
   I := 2;
@@ -205,7 +204,8 @@ begin
   FileIn := TFileStream.Create(Edit1.Text, fmOpenRead, fmShareExclusive);
   FileOut := TFileStream.Create(Edit2.Text, fmCreate, fmShareExclusive);
   Encrypt(FileIn, FileOut, P, Q, E);
-  MessageBox(Handle,PChar(Concat('При шифрование использовались:', #10#13, 'N = ', IntToStr(P * Q),#10#13,'e = ', IntToStr(E))),PChar('Внимание'),64);
+  MessageBox(Handle,PChar('Файл успешно зашифрован!'+#10#13+'N = '+IntToStr(P * Q)+#10#13+'E = '+IntToStr(E)),PChar('Внимание'),64);
+  Panel1.Caption:=' N = '+IntToStr(P)+' * '+IntToStr(Q)+' = '+LabeledEdit3.Text+' | E = '+IntToStr(e)+' | D = '+IntToStr(d);
   Panel1.Caption := 'Процесс шифрования завершен';
   Panel1.Refresh;
   Application.ProcessMessages;
@@ -252,7 +252,8 @@ begin
   FileIn := TFileStream.Create(Edit1.Text, fmOpenRead, fmShareExclusive);
   FileOut := TFileStream.Create(Edit2.Text, fmCreate, fmShareExclusive);
   Decrypt(FileIn, FileOut, P, Q, E);
-  MessageBox(Handle,PChar(Concat('При дешифрование использовались:', #10#13, 'N = ', IntToStr(P * Q),#10#13, 'd = ', IntToStr(D))),PChar('Внимание'),64);
+  MessageBox(Handle,PChar('Файл успешно расшифрован!'+#10#13+'N = '+IntToStr(P * Q)+#10#13+'D = '+IntToStr(D)),PChar('Внимание'),64);
+  Panel1.Caption:=' N = '+IntToStr(P)+' * '+IntToStr(Q)+' = '+LabeledEdit3.Text+' | E = '+IntToStr(e)+' | D = '+IntToStr(d);
   Panel1.Caption := 'Процесс дешифрования завершен';
   Panel1.Refresh;
   Application.ProcessMessages;
@@ -292,7 +293,7 @@ var
   E: TInt;
   D: TInt;
   i: Integer;
-  prk,pbk: string;
+  prk,pbk,hs: string;
 begin
   vx:
   p:=0; q:=0;
@@ -310,11 +311,18 @@ While not PrimeNumber(q) do begin
   dec(q);
   LabeledEdit2.Text:=IntToStr(q);
 end;
+  if p < 500 then goto vx;
+  if q < 500 then goto vx;
+try
   FillPQE(P, Q, E, D);
+except
+  Panel1.Caption:='Generator RSA public | private key';
+end;
   if d < 0 then goto vx;
   LabeledEdit3.Text:=IntToStr(P * Q);
   LabeledEdit4.Text:=IntToStr(e);
   LabeledEdit5.Text:=IntToStr(d);
+  Panel1.Caption:=' N = '+IntToStr(P)+' * '+IntToStr(Q)+' = '+LabeledEdit3.Text+' | E = '+IntToStr(e)+' | D = '+IntToStr(d);
   for i:=0 to Gauge1.MaxValue do Gauge1.Progress:=i;
   prk:=LabeledEdit5.Text+'|'+LabeledEdit2.Text+'|'+LabeledEdit1.Text+'|'+LabeledEdit4.Text+'|'+LabeledEdit3.Text;
   pbk:=LabeledEdit1.Text+'|'+LabeledEdit2.Text+'|'+LabeledEdit3.Text+'|'+LabeledEdit5.Text;
@@ -327,9 +335,17 @@ end;
   keys.Clear;
   keys.Add('-----BEGIN RSA PRIVATE KEY-----');
   keys.Add(prk); //Строка для записи в файл
-  //keys.Insert(2, s); //Если надо дописать на определенную позицию, в данном случае наша строка будет 3-й сверху
   keys.Add('-----END RSA PRIVATE KEY-----');
   keys.SaveToFile(ExtractFilePath(ParamStr(0))+'private.pem'); //Сохранил в файл
+ if FileExists(ExtractFilePath(ParamStr(0))+'private.pem') then
+  hs:=GetFileHash(ExtractFilePath(ParamStr(0))+'private.pem');
+ if hs <> '' then begin
+    keys.Clear;
+    hs:=encode64(hs);
+    keys.LoadFromFile(ExtractFilePath(ParamStr(0))+'private.pem');
+    keys.Insert(2, hs); //Если надо дописать на определенную позицию, в данном случае наша строка будет 3-й сверху
+    keys.SaveToFile(ExtractFilePath(ParamStr(0))+'private.pem'); //Сохранил в файл
+ end;
   /////////////////////////////////////////
  if FileExists(ExtractFilePath(ParamStr(0))+'public.pem') then
   keys.LoadFromFile(ExtractFilePath(ParamStr(0))+'public.pem');
@@ -339,6 +355,8 @@ end;
   //keys.Insert(2, s); //Если надо дописать на определенную позицию, в данном случае наша строка будет 3-й сверху
   keys.Add('-----END PUBLIC KEY-----');
   keys.SaveToFile(ExtractFilePath(ParamStr(0))+'public.pem'); //Сохранил в файл
+  if (FileExists(ExtractFilePath(ParamStr(0))+'public.pem')) and (FileExists(ExtractFilePath(ParamStr(0))+'private.pem')) then
+  MessageBox(Handle,PChar('RSA ключи успешно созданы!'),PChar('Внимание'),64);
 end;
 
 procedure TForm1.chk1Click(Sender: TObject);
@@ -352,15 +370,20 @@ begin
     LabeledEdit3.Clear;
     LabeledEdit4.Clear;
     LabeledEdit5.Clear;
+    OpenDialog1.FileName:='public.pem';
+    OpenDialog1.Filter:='public.pem|*.pem';
  if OpenDialog1.Execute then
  if FileExists(ExtractFilePath(OpenDialog1.FileName)+'public.pem') then begin
-  keys.LoadFromFile(ExtractFilePath(ParamStr(0))+'public.pem');
-  keys.Delimiter:='|';
-  keys.DelimitedText := keys.Text;
-  if keys.Text <> '' then keys.Text:=decode64(keys[3]);
+  keys.LoadFromFile(ExtractFilePath(OpenDialog1.FileName)+'public.pem');
+  if keys.Text <> '' then
+  if keys.Count = 3 then begin
+  keys.Text:=decode64(keys[1]);
   keys.Text:=DecryptString(keys.Text,KeyRelease);
   keys.Delimiter:='|';
   keys.DelimitedText := keys.Text;
+  end;
+  if keys.Text <> '' then begin
+  Panel1.Caption:='CRC RSA public key - OK';
   LabeledEdit1.Text:=Trim(keys[0]);
   LabeledEdit2.Text:=Trim(keys[1]);
   LabeledEdit3.Text:=Trim(keys[2]);
@@ -368,6 +391,7 @@ begin
   btn1.Enabled:=True;
   Button4.Enabled:=True;
   Button3.Enabled:=False;
+  end;
  end;
  end;
 end;
@@ -375,14 +399,19 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   keys:= TStringList.Create;
+  keyp:= TStringList.Create;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
+  keyp.Free;
   keys.Free;
 end;
 
 procedure TForm1.chk2Click(Sender: TObject);
+var
+  hs,vl,ks: string;
+  i: Integer;
 begin
  keys.Clear;
  if chk2.Checked then begin
@@ -393,14 +422,45 @@ begin
     LabeledEdit3.Clear;
     LabeledEdit4.Clear;
     LabeledEdit5.Clear;
+    //private.pem|*.pem|public.pem|*.pem|*.exe|*.exe
+    OpenDialog1.Filter:='private.pem|*.pem';
  if OpenDialog1.Execute then
- if FileExists(ExtractFilePath(ParamStr(0))+'private.pem') then  begin
-  keys.LoadFromFile(ExtractFilePath(ParamStr(0))+'private.pem');
-  keys.LoadFromFile(ExtractFilePath(ParamStr(0))+'private.pem');
-  keys.Delimiter:='|';
-  keys.DelimitedText := keys.Text;
-  if keys.Text <> '' then keys.Text:=decode64(keys[4]);
-  keys.Text:=DecryptString(keys.Text,KeyRelease);
+    OpenDialog1.FileName:='private.pem';
+ if FileExists(ExtractFilePath(OpenDialog1.FileName)+'private.pem') then  begin
+    keyp.LoadFromFile(ExtractFilePath(OpenDialog1.FileName)+'private.pem');
+    keys.LoadFromFile(ExtractFilePath(OpenDialog1.FileName)+'private.pem');
+  if keys.Text <> '' then begin
+  if keys.Count = 4 then
+     hs:=decode64(keys[2]);
+  if keys.Count <= 4 then
+     ks:=keys[1]
+  else begin
+     Panel1.Caption:='CRC RSA private key - ERROR';
+     Exit;
+  end;
+     keys.Clear;
+     keys.Add('-----BEGIN RSA PRIVATE KEY-----');
+     keys.Add(ks); //Строка для записи в файл
+     keys.Add('-----END RSA PRIVATE KEY-----');
+     keys.SaveToFile(ExtractFilePath(OpenDialog1.FileName)+'private.pem');
+     vl:=GetFileHash(ExtractFilePath(OpenDialog1.FileName)+'private.pem');
+  if vl = hs then begin
+     Panel1.Caption:='CRC RSA private key - OK';
+     keyp.SaveToFile(ExtractFilePath(OpenDialog1.FileName)+'private.pem');
+  end else begin
+     keyp.SaveToFile(ExtractFilePath(OpenDialog1.FileName)+'private.pem');
+     Panel1.Caption:='CRC RSA private key - ERROR';
+     Exit;
+  end;
+     keys.LoadFromFile(ExtractFilePath(OpenDialog1.FileName)+'private.pem');
+  end;
+  if keys.Text <> '' then
+  if keys.Count <= 4 then ks:=decode64(keys[1])
+  else begin
+     Panel1.Caption:='CRC RSA private key - ERROR';
+     Exit;
+  end;
+  keys.Text:=DecryptString(ks,KeyRelease);
   keys.Delimiter:='|';
   keys.DelimitedText := keys.Text;
   LabeledEdit5.Text:=keys[0];
